@@ -1,5 +1,9 @@
+body {
+  background: black;
+}
+
 #canvas {
-  border: 1px solid lightgrey;
+  border: 1px solid white;
   border-radius: 2px;
 }
 
