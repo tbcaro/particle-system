@@ -68,7 +68,7 @@ App.prototype = {
     for (var i = 0; i < particleCount; i++) {
       var p = new Particle({
         position: { x: this.elements.canvas.width / 2, y: this.elements.canvas.height / 2},
-        velocity: { vx: 2 * Math.random() - 1, vy: 2 * Math.random() - 1 },
+        velocity: { vx: 4 * Math.random() - 2, vy: 4 * Math.random() - 2 },
         canvas: this.elements.canvas,
         drawContext: this.context
       });
