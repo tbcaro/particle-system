@@ -20,37 +20,55 @@ App.prototype = {
   bindEventHandlers() {
     this.elements.btnStart.on('click', () => { // TBC : Use arrow function to maintain correct reference of 'this'
       console.log('start clicked...');
+      if (!this.simulation.started) {
+        try {
+          var particles = this.loadInitialParticles();
+          //var obstacles = this.loadInitialObstacles();
+          this.simulation.setParticles(particles);
+        } catch (ex) {
+          console.log(ex);
+          alert(ex.message);
+        }
+      }
+
+      this.simulation.start();
+    });
+    this.elements.btnStop.on('click', () => { // TBC : Use arrow function to maintain correct reference of 'this'
+      this.simulation.stop();
+    });
+    this.elements.btnReload.on('click', () => { // TBC : Use arrow function to maintain correct reference of 'this'
+      this.simulation.reload();
+    });
+    this.elements.txtXAcceleration.on('change', () => { // TBC : Use arrow function to maintain correct reference of 'this'
       try {
-        var particles = this.loadInitialParticles();
-        //var obstacles = this.loadInitialObstacles();
-        this.simulation.setParticles(particles);
-        this.simulation.start();
+        var xAccel = Number.parseFloat(this.elements.txtXAcceleration.val());
+        this.simulation.setXAccel(xAccel);
       } catch (ex) {
         console.log(ex);
         alert(ex.message);
       }
     });
-    this.elements.btnStop.on('click', () => { // TBC : Use arrow function to maintain correct reference of 'this'
-      console.log('stop clicked...');
-      this.simulation.stop();
-    });
-    this.elements.btnReload.on('click', () => { // TBC : Use arrow function to maintain correct reference of 'this'
-      console.log('reload clicked...');
-      this.simulation.reload();
+    this.elements.txtYAcceleration.on('change', () => { // TBC : Use arrow function to maintain correct reference of 'this'
+      try {
+        var yAccel = Number.parseFloat(this.elements.txtYAcceleration.val());
+        this.simulation.setYAccel(yAccel);
+      } catch (ex) {
+        console.log(ex);
+        alert(ex.message);
+      }
     });
     // $(document).on('simulation-tick', () => { // TBC : Use arrow function to maintain correct reference of 'this'
     //   console.log('simulation-tick...');
     // });
   },
   loadInitialParticles() {
-    const INITIAL_LOCATION = { x: this.elements.canvas.width / 2, y: this.elements.canvas.height / 2};
     var particles = [];
     var particleCount = this.elements.txtParticleCount.val()
 
     for (var i = 0; i < particleCount; i++) {
       var p = new Particle({
-        position: INITIAL_LOCATION,
-        velocity: { vx: Math.random() - 1, vy: Math.random() - 1 },
+        position: { x: this.elements.canvas.width / 2, y: this.elements.canvas.height / 2},
+        velocity: { vx: 2 * Math.random() - 1, vy: 2 * Math.random() - 1 },
         canvas: this.elements.canvas,
         drawContext: this.context
       });
@@ -69,6 +87,8 @@ function Simulation(drawContext, canvas) {
   this.obstacles = [];
   this.started = false;
   this.running = false;
+  this.simulatedFrames = 0;
+  this.particleAcceleration = { xAccel: 0, yAccel: 0 };
 }
 Simulation.prototype = {
   start() {
@@ -77,6 +97,8 @@ Simulation.prototype = {
     window.requestAnimationFrame(() => { this.run(); }); // TBC : Use arrow function to maintain correct reference of 'this'
   },
   reload() {
+    this.drawContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.particleAcceleration = { xAccel: 0, yAccel: 0 };
     this.particles = [];
     this.obstacles = [];
     this.started = false;
@@ -93,7 +115,10 @@ Simulation.prototype = {
   },
   tick() {
     this.drawContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.particles.forEach(function(particle) {
+    this.particles.forEach((particle) => {
+      // TBC : Accelerate particle velocity
+      particle.accelerate(this.particleAcceleration);
+
       // TBC : Update particle position
       particle.updatePosition();
 
@@ -104,25 +129,23 @@ Simulation.prototype = {
       particle.draw();
     });
 
-    var event = jQuery.Event('simulation-tick');
-    event.particles = this.particles;
-    event.obstacles = this.obstacles;
-    $(document).trigger(event);
+    this.simulatedFrames++;
+    // var event = jQuery.Event('simulation-tick');
+    // event.particles = this.particles;
+    // event.obstacles = this.obstacles;
+    // $(document).trigger(event);
   },
-  setAcceleration(acceleration) {
-    this.acceleration = acceleration;
+  setXAccel(xAccel) {
+    this.particleAcceleration.xAccel = xAccel;
   },
-  addParticle(particle) {
-    this.particles.push(particle);
+  setYAccel(yAccel) {
+    this.particleAcceleration.yAccel = yAccel;
   },
   setParticles(particles) {
     this.particles = particles;
   },
   getParticles() {
     return this.particles;
-  },
-  addObstacle(obstacle) {
-    this.obstacles.push(obstacle);
   },
   setObstacles(obstacles) {
     this.obstacles = obstacles;
@@ -133,19 +156,19 @@ Simulation.prototype = {
 };
 
 function Particle(options) {
-  var DEFAULT_POSITION = { x:0, y:0 },
-      DEFAULT_VELOCITY = { vx:0, vy:0 },
-      DEFAULT_COLOR = '#f00',
-      DEFAULT_RADIUS = 2,
-      DEFAULT_CANVAS = $('#canvas')[0],
-      DEFAULT_DRAW_CONTEXT = DEFAULT_CANVAS.getContext('2d');
+  this.position = { x:0, y:0 };
+  this.velocity = { vx:0, vy:0 };
+  this.color = '#000';
+  this.radius = 2;
+  this.canvas = $('#canvas')[0];
+  this.drawContext = this.canvas.getContext('2d');
 
-  options.hasOwnProperty('position') ? this.position = options.position : this.position = DEFAULT_POSITION;
-  options.hasOwnProperty('velocity') ? this.velocity = options.velocity : this.velocity = DEFAULT_VELOCITY;
-  options.hasOwnProperty('radius') ? this.radius = options.radius : this.radius = DEFAULT_RADIUS;
-  options.hasOwnProperty('color') ? this.color = options.color : this.color = DEFAULT_COLOR;
-  options.hasOwnProperty('canvas') ? this.canvas = options.canvas : this.canvas = DEFAULT_CANVAS;
-  options.hasOwnProperty('drawContext') ? this.drawContext = options.drawContext : this.drawContext = DEFAULT_DRAW_CONTEXT;
+  if (options.hasOwnProperty('position')) this.position = options.position;
+  if (options.hasOwnProperty('velocity')) this.velocity = options.velocity;
+  if (options.hasOwnProperty('radius')) this.radius = options.radius;
+  if (options.hasOwnProperty('color')) this.color = options.color;
+  if (options.hasOwnProperty('canvas')) this.canvas = options.canvas;
+  if (options.hasOwnProperty('drawContext')) this.drawContext = options.drawContext;
 }
 Particle.prototype = {
   updatePosition() {
@@ -164,6 +187,10 @@ Particle.prototype = {
     this.drawContext.beginPath();
     this.drawContext.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
     this.drawContext.fill();
+  },
+  accelerate(acceleration) {
+    this.velocity.vx > 0 ? this.velocity.vx += acceleration.xAccel : this.velocity.vx -= acceleration.xAccel;
+    this.velocity.vy > 0 ? this.velocity.vy += acceleration.yAccel : this.velocity.vy -= acceleration.yAccel;
   }
 };
 
