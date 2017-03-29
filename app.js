@@ -83,56 +83,94 @@ App.prototype = {
   },
   loadInitialObstacles() {
     var obstacles = [];
-    // var obstacleCount = Math.floor(Math.random() * 9 + 1); // TBC : Max of 10 obstacles
-    var obstacleCount = 5;
 
     obstacles.push(new Obstacle({
       position: {
-        x: 100,
-        y: 100
+        x: 0,
+        y: 0
       },
-      type: ObstacleType.BOUNCEY,
-      size: Math.random() * 100 + 10,
+      type: ObstacleType.STICKY,
+      size: 100,
       canvas: this.elements.canvas,
       drawContext: this.context
     }));
 
     obstacles.push(new Obstacle({
       position: {
-        x: 400,
-        y: 400
+        x: this.elements.canvas.width - 100,
+        y: 0
       },
-      type: ObstacleType.BOUNCEY,
-      size: Math.random() * 100 + 10,
+      type: ObstacleType.STICKY,
+      size: 100,
       canvas: this.elements.canvas,
       drawContext: this.context
     }));
 
-    // for (var i = 0; i < obstacleCount; i++) {
-    //   var randXOffset = Math.floor(Math.random() * 2);
-    //   var randYOffset = Math.floor(Math.random() * 2);
-    //   var randObstacleType = Math.floor(Math.random() * 2);
-    //   var xOffset = 100;
-    //   var yOffset = 100;
-    //   var obstacleType = ObstacleType.BOUNCEY;
-    //
-    //   randXOffset == 0 ? xOffset = -xOffset : xOffset = xOffset;
-    //   randYOffset == 0 ? yOffset = -yOffset : yOffset = yOffset;
-    //   randObstacleType == 0 ? obstacleType = ObstacleType.BOUNCEY : obstacleType = ObstacleType.STICKY;
-    //
-    //   var o = new Obstacle({
-    //     position: {
-    //       x: (this.elements.canvas.width / 2) + Math.random() * 100,
-    //       y: (this.elements.canvas.height / 2) + Math.random() * 100
-    //     },
-    //     type: obstacleType,
-    //     size: Math.random() * 50 + 1,
-    //     canvas: this.elements.canvas,
-    //     drawContext: this.context
-    //   });
-    //
-    //   obstacles.push(o);
-    // }
+    obstacles.push(new Obstacle({
+      position: {
+        x: 0,
+        y: this.elements.canvas.height - 100
+      },
+      type: ObstacleType.STICKY,
+      size: 100,
+      canvas: this.elements.canvas,
+      drawContext: this.context
+    }));
+
+    obstacles.push(new Obstacle({
+      position: {
+        x: this.elements.canvas.width - 100,
+        y: this.elements.canvas.height - 100
+      },
+      type: ObstacleType.STICKY,
+      size: 100,
+      canvas: this.elements.canvas,
+      drawContext: this.context
+    }));
+
+    obstacles.push(new Obstacle({
+      position: {
+        x: 20,
+        y: this.elements.canvas.height / 2 - 20
+      },
+      type: ObstacleType.BOUNCEY,
+      size: 40,
+      canvas: this.elements.canvas,
+      drawContext: this.context
+    }));
+
+    obstacles.push(new Obstacle({
+      position: {
+        x: this.elements.canvas.width - 20 - 40,
+        y: this.elements.canvas.height / 2 - 20
+      },
+      type: ObstacleType.BOUNCEY,
+      size: 40,
+      canvas: this.elements.canvas,
+      drawContext: this.context
+    }));
+
+    obstacles.push(new Obstacle({
+      position: {
+        x: this.elements.canvas.width / 2 - 20,
+        y: 20
+      },
+      type: ObstacleType.BOUNCEY,
+      size: 40,
+      canvas: this.elements.canvas,
+      drawContext: this.context
+    }));
+
+    obstacles.push(new Obstacle({
+      position: {
+        x: this.elements.canvas.width / 2 - 20,
+        y: this.elements.canvas.height - 20 - 40,
+      },
+      type: ObstacleType.BOUNCEY,
+      size: 40,
+      canvas: this.elements.canvas,
+      drawContext: this.context
+    }));
 
     return obstacles;
   }
@@ -283,13 +321,17 @@ Obstacle.prototype = {
           particle.velocity.vx = -particle.velocity.vx;
         }
       } else {
+        this.position.x++;
+        this.position.y++;
+        this.size-=2;
         particle.velocity.vx = 0;
         particle.velocity.vy = 0;
+        particle.color = '#fff';
       }
     }
   },
   draw() {
-    this.type === ObstacleType.BOUNCEY ? this.drawContext.fillStyle = '#0f0' : this.drawContext.fillStyle = '#00f';
+    this.type === ObstacleType.BOUNCEY ? this.drawContext.fillStyle = '#ccff00' : this.drawContext.fillStyle = '#00ccff';
     this.drawContext.fillRect(this.position.x, this.position.y, this.size, this.size);
   },
   calculateDistanceToCenter(particle) {
